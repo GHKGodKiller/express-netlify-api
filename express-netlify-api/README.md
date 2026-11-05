@@ -1,7 +1,7 @@
 ## Entregables
 
-1. **Repositorio en GitHub:** [URL de tu repositorio]
-2. **URL Pública en Netlify:** [URL de tu sitio en Netlify ej. https://mi-proyecto.netlify.app/api/time]
+1. **Repositorio en GitHub:** https://github.com/GHKGodKiller/ExpressyNetlifyFunctions
+2. **URL Pública en Netlify:** https://netlifyleonardo.netlify.app
 3. **Colección de Postman:** Exportada en la raíz del proyecto como `express_netlify_api.postman_collection.json`.
 
 ## 📸 Evidencias Visuales
