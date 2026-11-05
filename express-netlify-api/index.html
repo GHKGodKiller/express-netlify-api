@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probar API Serverless</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+        input, textarea, button { width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box; }
+        button { background-color: #0056b3; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Enviar Correo (Prueba de API)</h2>
+    <form id="emailForm">
+        <!-- Debes poner tu API_SECRET_KEY aquí para que pase el middleware -->
+        <input type="password" id="apiKey" placeholder="Tu API_SECRET_KEY" required>
+        <input type="text" id="senderName" placeholder="Nombre del remitente (Opcional)">
+        <input type="email" id="to" placeholder="Correo destino" required>
+        <input type="text" id="subject" placeholder="Asunto" required>
+        <textarea id="message" placeholder="Mensaje..." required></textarea>
+        <button type="submit">Enviar Correo</button>
+    </form>
+    <p id="status"></p>
+
+    <script>
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('status');
+            status.textContent = 'Enviando...';
+
+            const apiKey = document.getElementById('apiKey').value;
+            const bodyData = {
+                to: document.getElementById('to').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value,
+                senderName: document.getElementById('senderName').value
+            };
+
+            try {
+                const response = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey // Cabecera requerida por tu middleware
+                    },
+                    body: JSON.stringify(bodyData)
+                });
+                const result = await response.json();
+                status.textContent = result.message || JSON.stringify(result);
+            } catch (error) {
+                status.textContent = 'Error al conectar con la API';
+            }
+        });
+    </script>
+</body>
+</html>
