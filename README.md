@@ -1,18 +1,7 @@
 ## Entregables
 
-1. **Repositorio en GitHub:** https://github.com/GHKGodKiller/ExpressyNetlifyFunctions
+1. **Repositorio en GitHub:** https://github.com/GHKGodKiller/express-netlify-api
 2. **URL Pública en Netlify:** https://netlifyleonardo.netlify.app
-3. **Colección de Postman:** Exportada en la raíz del proyecto como `express_netlify_api.postman_collection.json`.
-
-## 📸 Evidencias Visuales
-
-*(Reemplaza estos textos con tus capturas de pantalla)*
-* `[Imagen: Captura de pantalla de la petición GET /api/time en Postman con respuesta 200 OK]`
-* `[Imagen: Captura de pantalla de la petición POST /api/send-email en Postman con respuesta 200 OK]`
-* `[Imagen: Captura de pantalla de la bandeja de entrada del correo recibiendo el email]`
-* `[Imagen: Captura de pantalla del panel de Netlify mostrando las variables de entorno]`
-
----
 
 ## Preguntas Teóricas de Reflexión Arquitectónica
 
