@@ -1,7 +1,7 @@
 import express from 'express';
 import serverless from 'serverless-http';
 import nodemailer from 'nodemailer';
-import { getStore } from '@netlify/blobs';
+import { getStore, connectLambda } from '@netlify/blobs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -126,7 +126,6 @@ router.post('/send-email', requireApiKey, async (req, res) => {
     });
   }
 });
-
 const MAX_EVENTOS_ESCANEO = 5000;
 const LIMITE_RECIENTES = 50;
 
@@ -186,7 +185,6 @@ function celdaCSV(valor) {
   if (/^[=+\-@]/.test(texto)) texto = `'${texto}`;
   return /[",\r\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
 }
-
 
 router.post('/metrics', async (req, res) => {
   try {
@@ -284,7 +282,6 @@ router.get('/metrics/export', async (req, res) => {
     });
   }
 });
-
 router.get('/metrics', async (req, res) => {
   try {
     const { step, source } = req.query;
@@ -320,4 +317,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-export const handler = serverless(app);
+const serverlessHandler = serverless(app);
+
+export const handler = async (event, context) => {
+  connectLambda(event);
+  return serverlessHandler(event, context);
+};
