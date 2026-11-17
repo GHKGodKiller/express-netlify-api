@@ -1,0 +1,266 @@
+{
+  "info": {
+    "name": "Telemetría Netlify Blobs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://netlifyleonardo.netlify.app"
+    }
+  ],
+  "item": [
+    {
+      "name": "POST /api/metrics - Atracción (tofu_attraction)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test('Registro persistido con id y timestamp', () => {",
+              "  pm.expect(j.status).to.eql('success');",
+              "  pm.expect(j.data.id).to.match(/^metric_\\d+_/);",
+              "  pm.expect(j.data).to.have.property('timestamp');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"step\": \"tofu_attraction\",\n  \"source\": \"qr_campus\",\n  \"sessionId\": \"sess_postman_01\",\n  \"metadata\": {\n    \"device\": \"mobile\",\n    \"projectTarget\": \"alianza-juego-compañeros\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "POST /api/metrics - Conversión (bofu_interaction)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+              "const j = pm.response.json();",
+              "pm.test('Registro persistido con id y timestamp', () => {",
+              "  pm.expect(j.status).to.eql('success');",
+              "  pm.expect(j.data.id).to.match(/^metric_\\d+_/);",
+              "  pm.expect(j.data).to.have.property('timestamp');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"step\": \"bofu_interaction\",\n  \"source\": \"qr_campus\",\n  \"sessionId\": \"sess_postman_01\",\n  \"metadata\": {\n    \"device\": \"mobile\",\n    \"projectTarget\": \"alianza-juego-compañeros\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET /api/metrics - Resumen y eventos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('Incluye summary y recentEvents', () => {",
+              "  pm.expect(j.data.summary).to.have.property('totalEvents');",
+              "  pm.expect(j.data.summary).to.have.property('byStep');",
+              "  pm.expect(j.data.summary).to.have.property('bySource');",
+              "  pm.expect(j.data.recentEvents).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET /api/metrics?step=bofu_interaction - Filtro (Reto 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('Incluye summary y recentEvents', () => {",
+              "  pm.expect(j.data.summary).to.have.property('totalEvents');",
+              "  pm.expect(j.data.summary).to.have.property('byStep');",
+              "  pm.expect(j.data.summary).to.have.property('bySource');",
+              "  pm.expect(j.data.recentEvents).to.be.an('array');",
+              "});",
+              "pm.test('Solo eventos del step filtrado', () => j.data.recentEvents.forEach(e => pm.expect(e.step).to.eql('bofu_interaction')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics?step=bofu_interaction",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "metrics"
+          ],
+          "query": [
+            {
+              "key": "step",
+              "value": "bofu_interaction"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET /api/metrics/export?format=csv - CSV (Reto 3)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Content-Type text/csv', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv'));",
+              "pm.test('Content-Disposition attachment', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('metricas_funnel.csv'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics/export?format=csv",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "metrics",
+            "export"
+          ],
+          "query": [
+            {
+              "key": "format",
+              "value": "csv"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "POST /api/metrics - Validación (400 sin source)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"step\": \"landing_view\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "metrics"
+          ]
+        }
+      }
+    }
+  ]
+}

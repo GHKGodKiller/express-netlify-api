@@ -1,57 +1,194 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Probar API Serverless</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-        input, textarea, button { width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box; }
-        button { background-color: #0056b3; color: white; border: none; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telemetría del Funnel · Netlify Blobs</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; max-width: 640px; margin: auto; color: #222; }
+    h2 { margin-top: 28px; }
+    input, textarea, button, select { width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box; font-size: 14px; }
+    button, .btn { background: #0056b3; color: #fff; border: none; cursor: pointer; border-radius: 6px; }
+    .btn { display: block; padding: 10px; text-align: center; text-decoration: none; margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid button, .grid .btn { margin-bottom: 0; }
+    .alt { background: #444; }
+    pre { background: #f4f4f4; padding: 12px; border-radius: 6px; overflow: auto; max-height: 360px; font-size: 12px; }
+    small { color: #666; }
+    details { margin-top: 28px; }
+  </style>
 </head>
 <body>
-    <h2>Enviar Correo (Prueba de API)</h2>
-    <form id="emailForm">
-        <!-- Debes poner tu API_SECRET_KEY aquí para que pase el middleware -->
-        <input type="password" id="apiKey" placeholder="Tu API_SECRET_KEY" required>
-        <input type="text" id="senderName" placeholder="Nombre del remitente (Opcional)">
-        <input type="email" id="to" placeholder="Correo destino" required>
-        <input type="text" id="subject" placeholder="Asunto" required>
-        <textarea id="message" placeholder="Mensaje..." required></textarea>
-        <button type="submit">Enviar Correo</button>
+  <h1>Telemetría del Funnel</h1>
+  <small>
+    Sesión: <code id="sessionLabel"></code><br>
+    Prueba con: <code>?src=qr_campus&amp;utm_source=qr&amp;utm_medium=poster&amp;utm_campaign=demo_day</code>
+  </small>
+
+  <h2>1. Disparar eventos</h2>
+  <div class="grid">
+    <button data-step="tofu_attraction">tofu_attraction</button>
+    <button data-step="mofu_landing">mofu_landing</button>
+    <button data-step="bofu_interaction">bofu_interaction</button>
+    <button data-step="feedback_submission">feedback_submission</button>
+  </div>
+  <a id="crossPromo" class="btn alt" style="margin-top:8px" href="https://afterthestormats.netlify.app/" target="_blank" rel="noopener">
+    Ir al proyecto aliado (bofu_cross_promo)
+  </a>
+  <p id="eventStatus"></p>
+
+  <h2>2. Consultar métricas</h2>
+  <div class="grid">
+    <input id="filterStep" placeholder="Filtro step (opcional)">
+    <input id="filterSource" placeholder="Filtro source (opcional)">
+  </div>
+  <div class="grid">
+    <button id="btnLoad" type="button">Actualizar métricas</button>
+    <a id="btnCsv" class="btn alt" href="/api/metrics/export?format=csv">Descargar CSV</a>
+  </div>
+  <pre id="output">Aún sin datos…</pre>
+
+  <details>
+    <summary>Probar envío de correo (Tarea 6)</summary>
+    <form id="emailForm" style="margin-top:12px">
+      <input type="password" id="apiKey" placeholder="Tu API_SECRET_KEY" required>
+      <input type="text" id="senderName" placeholder="Nombre del remitente (Opcional)">
+      <input type="email" id="to" placeholder="Correo destino" required>
+      <input type="text" id="subject" placeholder="Asunto" required>
+      <textarea id="message" placeholder="Mensaje..." required></textarea>
+      <button type="submit">Enviar Correo</button>
     </form>
     <p id="status"></p>
+  </details>
 
-    <script>
-        document.getElementById('emailForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const status = document.getElementById('status');
-            status.textContent = 'Enviando...';
+  <script>
+    function generarUUID() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    }
 
-            const apiKey = document.getElementById('apiKey').value;
-            const bodyData = {
-                to: document.getElementById('to').value,
-                subject: document.getElementById('subject').value,
-                message: document.getElementById('message').value,
-                senderName: document.getElementById('senderName').value
-            };
+    function obtenerSessionId() {
+      try {
+        let id = sessionStorage.getItem('sessionId');
+        if (!id) {
+          id = generarUUID();
+          sessionStorage.setItem('sessionId', id);
+        }
+        return id;
+      } catch (_) {
+        return 'anon'; 
+      }
+    }
 
-            try {
-                const response = await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': apiKey // Cabecera requerida por tu middleware
-                    },
-                    body: JSON.stringify(bodyData)
-                });
-                const result = await response.json();
-                status.textContent = result.message || JSON.stringify(result);
-            } catch (error) {
-                status.textContent = 'Error al conectar con la API';
-            }
+    function obtenerUTM() {
+      const params = new URLSearchParams(window.location.search);
+      const utm = {};
+      ['utm_source', 'utm_medium', 'utm_campaign'].forEach((k) => {
+        if (params.get(k)) utm[k] = params.get(k);
+      });
+      return utm;
+    }
+
+    const sessionId = obtenerSessionId();
+    const params = new URLSearchParams(window.location.search);
+    const canalOrigen = params.get('src') || params.get('utm_source') || 'directo';
+    document.getElementById('sessionLabel').textContent = sessionId;
+
+    async function registrarMetrica(paso, origen, extra = {}) {
+      const metadata = {
+        device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+        ...obtenerUTM(),
+        ...extra
+      };
+      const payload = { step: paso, source: origen, sessionId, metadata };
+
+      try {
+        const resp = await fetch('/api/metrics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
         });
-    </script>
+        return await resp.json();
+      } catch (err) {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/metrics', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+        }
+        console.warn('Telemetría enviada por respaldo o no enviada:', err);
+        return null;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      registrarMetrica('mofu_landing', canalOrigen);
+    });
+
+    document.querySelectorAll('button[data-step]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const out = document.getElementById('eventStatus');
+        out.textContent = 'Enviando…';
+        const result = await registrarMetrica(btn.dataset.step, canalOrigen);
+        out.textContent = result ? (result.message || JSON.stringify(result)) : 'No se pudo confirmar el envío.';
+      });
+    });
+
+    document.getElementById('crossPromo').addEventListener('click', () => {
+      registrarMetrica('bofu_cross_promo', canalOrigen, {
+        projectTarget: 'alianza-juego-companeros'
+      });
+    });
+
+    function construirQuery() {
+      const q = new URLSearchParams();
+      const step = document.getElementById('filterStep').value.trim();
+      const source = document.getElementById('filterSource').value.trim();
+      if (step) q.set('step', step);
+      if (source) q.set('source', source);
+      return q;
+    }
+
+    document.getElementById('btnLoad').addEventListener('click', async () => {
+      const out = document.getElementById('output');
+      out.textContent = 'Cargando…';
+      try {
+        const q = construirQuery().toString();
+        const resp = await fetch('/api/metrics' + (q ? '?' + q : ''));
+        out.textContent = JSON.stringify(await resp.json(), null, 2);
+      } catch (e) {
+        out.textContent = 'Error al consultar la API';
+      }
+    });
+
+    document.getElementById('btnCsv').addEventListener('click', (e) => {
+      const q = construirQuery();
+      q.set('format', 'csv');
+      e.currentTarget.href = '/api/metrics/export?' + q.toString();
+    });
+
+    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.textContent = 'Enviando...';
+      try {
+        const response = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': document.getElementById('apiKey').value
+          },
+          body: JSON.stringify({
+            to: document.getElementById('to').value,
+            subject: document.getElementById('subject').value,
+            message: document.getElementById('message').value,
+            senderName: document.getElementById('senderName').value
+          })
+        });
+        const result = await response.json();
+        status.textContent = result.message || JSON.stringify(result);
+      } catch (error) {
+        status.textContent = 'Error al conectar con la API';
+      }
+    });
+  </script>
 </body>
 </html>

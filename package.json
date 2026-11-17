@@ -1,5 +1,5 @@
 {
-  "name": "express-netlify-api",
+  "name": "metrics-netlify-blobs-api",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -7,6 +7,7 @@
     "start": "node netlify/functions/api.js"
   },
   "dependencies": {
+    "@netlify/blobs": "^8.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "nodemailer": "^6.9.15",
