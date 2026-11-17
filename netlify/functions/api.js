@@ -126,10 +126,22 @@ router.post('/send-email', requireApiKey, async (req, res) => {
     });
   }
 });
+
 const MAX_EVENTOS_ESCANEO = 5000;
 const LIMITE_RECIENTES = 50;
 
 function obtenerAlmacenMetricas() {
+  const { BLOBS_SITE_ID, BLOBS_TOKEN } = process.env;
+
+  if (BLOBS_SITE_ID && BLOBS_TOKEN) {
+    return getStore({
+      name: 'funnel-metrics',
+      siteID: BLOBS_SITE_ID,
+      token: BLOBS_TOKEN,
+      consistency: 'strong'
+    });
+  }
+
   return getStore({
     name: 'funnel-metrics',
     consistency: 'strong'
@@ -190,7 +202,6 @@ router.post('/metrics', async (req, res) => {
   try {
     const { step, source, sessionId, metadata } = req.body || {};
 
-    // 1. Validación defensiva
     if (!step || !source || !String(step).trim() || !String(source).trim()) {
       return res.status(400).json({
         status: 'error',
@@ -282,6 +293,7 @@ router.get('/metrics/export', async (req, res) => {
     });
   }
 });
+
 router.get('/metrics', async (req, res) => {
   try {
     const { step, source } = req.query;
